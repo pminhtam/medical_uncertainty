@@ -17,8 +17,9 @@ from pathlib import Path
 from dataloader.xray_loader import MyDataset
 import numpy as np
 from utils.utils import calc_uncertainly
-
-def eval_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,image_size=256,\
+from models.train_torch import eval_train
+import matplotlib.pyplot as plt
+def eval_xray_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,image_size=256,\
               batch_size=16,resume = '',lr=0.003,num_workers=8,checkpoint="checkpoint",epochs=20,print_every=1000, \
               adj_brightness=1.0, adj_contrast=1.0):
     log = Logger(os.path.join(checkpoint,"logs"))
@@ -66,7 +67,15 @@ def eval_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,im
 
     running_loss = 0
     steps = 0
-    for inputs, labels in dataloader_val:
+
+    # accuracy_score__ = eval_train(model, dataloader_train, device, criterion)
+    # print("dataloader_train ",accuracy_score__)
+    # accuracy_score__ = eval_train(model, dataloader_val, device, criterion)
+    # print("dataloader_val : ",accuracy_score__)
+    # exit(0)
+    uncertaines = []
+    for inputs, labels in dataloader_train:
+    # for inputs, labels in dataloader_val:
     # for inputs, labels in dataloader_outline:
         #     for inputs, labels in tqdm(testloader):
         steps += 1
@@ -77,10 +86,14 @@ def eval_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,im
         # print(logps)
         # logps = logps.squeeze()
         print(calc_uncertainly(out))
+        uncertaines.append(calc_uncertainly(out).cpu().detach().numpy()[0][0])
 
         # loss = criterion(out, labels)
 
         # running_loss += loss.item()
+    plt.plot(uncertaines, 'o')
+    plt.savefig("dataloader_train.jpg")
+    # plt.savefig("dataloader_outline.jpg")
     return
 
 if __name__ == "__main__":

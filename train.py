@@ -24,8 +24,8 @@ def parse_args():
 
     ## torch
     parser_xception = subparsers.add_parser('xception', help='Xceptionnet')
-    parser_xception = subparsers.add_parser('normal', help='normal')
-    parser_xception = subparsers.add_parser('normal_branchy', help='normal_branchy')
+    parser_normal = subparsers.add_parser('normal', help='normal')
+    parser_normal_branchy = subparsers.add_parser('normal_branchy', help='normal_branchy')
 
     ## adjust image
     parser.add_argument('--adj_brightness',type=float, default = 1, help='adj_brightness')
@@ -38,8 +38,7 @@ def get_criterion_torch(arg_loss):
     if arg_loss == "bce":
         criterion = nn.BCELoss()
     elif arg_loss == "focal":
-        from pytorch_model.focal_loss import FocalLoss
-        criterion = FocalLoss(gamma=2)
+        criterion = None
     return criterion
 if __name__ == "__main__":
     args = parse_args()
@@ -54,22 +53,15 @@ if __name__ == "__main__":
         os.makedirs(args.checkpoint)
     with open(os.path.join(args.checkpoint, 'args.txt'), 'w') as f:
         json.dump(args.__dict__, f, indent=2)
-    if model== "capsule":
-        from pytorch_model.train_torch import train_capsule
-        train_capsule(train_set = args.train_set,val_set = args.val_set,gpu_id=gpu_id,manualSeed=args.seed,resume=args.resume,beta1=args.beta1, \
-                      dropout=0.05,image_size=args.image_size,batch_size=args.batch_size,lr=args.lr, \
-                      num_workers=args.workers,checkpoint=args.checkpoint,epochs=args.niter,\
-                      adj_brightness=adj_brightness,adj_contrast=adj_contrast)
-        pass
-    elif model == "xception":
-        from models.train_torch import train_cnn
+    if model == "xception":
+        from models.train_torch import train_xray_cnn
         from models.xception import xception2
         from losses.mse_outline import mse_loss
         model = xception2(pretrained=True)
         # criterion = get_criterion_torch(args.loss)
         criterion = mse_loss
         print("xception")
-        train_cnn(model,criterion=criterion,train_set = args.train_set,val_set = args.val_set,image_size=args.image_size,resume=args.resume, \
+        train_xray_cnn(model,criterion=criterion,train_set = args.train_set,val_set = args.val_set,image_size=args.image_size,resume=args.resume, \
                   batch_size=args.batch_size,lr=args.lr,num_workers=args.workers,checkpoint=args.checkpoint,\
                   epochs=args.niter,print_every=args.print_every,adj_brightness=adj_brightness,adj_contrast=adj_contrast)
         pass
@@ -77,15 +69,14 @@ if __name__ == "__main__":
 
     elif model == "normal":
         from models.wavelet_model.model_normal import NormalModel
-        from models.train_torch import train_cnn
-        from models.xception import xception2
+        from models.train_torch import train_xray_cnn
         from losses.mse_outline import mse_loss
 
         model = NormalModel(in_channel=1)
         # criterion = get_criterion_torch(args.loss)
         criterion = mse_loss
         print("normal")
-        train_cnn(model, criterion=criterion, train_set=args.train_set, val_set=args.val_set,
+        train_xray_cnn(model, criterion=criterion, train_set=args.train_set, val_set=args.val_set,
                   image_size=args.image_size, resume=args.resume, \
                   batch_size=args.batch_size, lr=args.lr, num_workers=args.workers, checkpoint=args.checkpoint, \
                   epochs=args.niter, print_every=args.print_every,adj_brightness=adj_brightness,adj_contrast=adj_contrast)
@@ -93,15 +84,14 @@ if __name__ == "__main__":
 
     elif model == "normal_branchy":
         from models.wavelet_model.model_normal import NormalModel
-        from models.train_torch import train_branchy_cnn
-        from models.xception import xception2
+        from models.train_torch import train_branchy_xray_cnn
         from losses.mse_outline import mse_loss
 
         model = NormalModel(in_channel=1)
         # criterion = get_criterion_torch(args.loss)
         criterion = mse_loss
         print("normal")
-        train_branchy_cnn(model, criterion=criterion, train_set=args.train_set, val_set=args.val_set,
+        train_branchy_xray_cnn(model, criterion=criterion, train_set=args.train_set, val_set=args.val_set,
                   image_size=args.image_size, resume=args.resume, \
                   batch_size=args.batch_size, lr=args.lr, num_workers=args.workers, checkpoint=args.checkpoint, \
                   epochs=args.niter, print_every=args.print_every,adj_brightness=adj_brightness,adj_contrast=adj_contrast)

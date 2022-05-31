@@ -19,7 +19,7 @@ import numpy as np
 es_patience = 100  # Early Stopping patience - for how many epochs with no improvements to wait
 best_accuracy = 0.0
 
-def eval_train(model ,dataloader_val,device,criterion,text_writer,adj_brightness=1.0, adj_contrast=1.0 ):
+def eval_train(model ,dataloader_val,device,criterion,text_writer=None,adj_brightness=1.0, adj_contrast=1.0 ):
     test_loss = 0
     accuracy = 0
     model.eval()
@@ -29,7 +29,7 @@ def eval_train(model ,dataloader_val,device,criterion,text_writer,adj_brightness
             # inputs = transforms.functional.adjust_brightness(inputs,adj_brightness)
             # inputs = transforms.functional.adjust_contrast(inputs,adj_contrast)
             logps,_,_ = model.forward(inputs)
-            logps = logps.squeeze()
+            # logps = logps.squeeze()
             batch_loss = criterion(logps, labels)
             #                 batch_loss = F.binary_cross_entropy_with_logits(logps, labels)
             test_loss += batch_loss.item()
@@ -45,12 +45,13 @@ def eval_train(model ,dataloader_val,device,criterion,text_writer,adj_brightness
     print(
           f"Test loss: {test_loss/len(dataloader_val):.3f}.. "
           f"Test accuracy: {accuracy/len(dataloader_val):.3f}")
-    text_writer.write('Test loss %.4f, Test accuracy  %.4f \n' % (
-        test_loss / len(dataloader_val), accuracy / len(dataloader_val)))
-    text_writer.flush()
+    if text_writer != None:
+        text_writer.write('Test loss %.4f, Test accuracy  %.4f \n' % (
+            test_loss / len(dataloader_val), accuracy / len(dataloader_val)))
+        text_writer.flush()
     model.train()
     return accuracy
-def train_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,image_size=256,\
+def train_xray_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,image_size=256,\
               batch_size=16,resume = '',lr=0.003,num_workers=8,checkpoint="checkpoint",epochs=20,print_every=1000, \
               adj_brightness=1.0, adj_contrast=1.0):
     patience = es_patience
@@ -205,7 +206,7 @@ def train_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,i
     return
 
 
-def train_branchy_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,image_size=256,\
+def train_branchy_xray_cnn(model,criterion,train_set = '../../extract_raw_img',val_set ="" ,image_size=256,\
               batch_size=16,resume = '',lr=0.003,num_workers=8,checkpoint="checkpoint",epochs=20,print_every=1000, \
               adj_brightness=1.0, adj_contrast=1.0):
     patience = es_patience
@@ -365,6 +366,6 @@ if __name__ == "__main__":
 
     model = xception(pretrained=False)
     criterion = nn.BCELoss()
-    train_cnn(model,criterion,train_set='../../../data/extract_raw_img_test', val_set='../../../data/extract_raw_img_test', checkpoint="../../../model/xception/",)
+    train_xeay_cnn(model,criterion,train_set='../../../data/extract_raw_img_test', val_set='../../../data/extract_raw_img_test', checkpoint="../../../model/xception/",)
     # eval_capsule(val_set ='../../../extract_raw_img_test',checkpoint="../../../model/capsule/",resume=6)
 
